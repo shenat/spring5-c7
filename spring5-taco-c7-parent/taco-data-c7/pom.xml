@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+<!-- 	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.3.1.RELEASE</version>
+		<relativePath/> lookup parent from repository
+	</parent> -->
+	<parent>
+		<groupId>com.sat</groupId>
+  		<artifactId>taco-c7-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<!-- <groupId>com.sat</groupId> -->
+	<artifactId>taco-data-c7</artifactId>
+	<!-- <version>0.0.1-SNAPSHOT</version> -->
+	<name>taco-data-c7</name>
+	<description>taco-data-c7</description>
+
+	<properties>
+		<java.version>1.8</java.version>
+	</properties>
+
+	<dependencies>
+		<!-- 其他项目依赖 -->
+		<dependency>
+			<groupId>com.sat</groupId>
+			<artifactId>taco-domain-c7</artifactId>
+			<version>${tacocloud.version}</version>
+		</dependency>
+		<!-- 使用JPA来进行关系性数据库的持久化，不再使用jdbc了，JPA属于spring data，它还有其他针对非关系数据库的方案 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<!-- spring data rest可以通过repository生成rest，在edit spring中叫rest repositories -->
+		<!-- 应用的自动配置功能会为SpringData（包括SpringDataJPA、SpringDataMongo等）创建的所有repository自动创建RESTAPI。 -->
+		<!-- 这个依赖在springboot2.0后，不需要特别引入，在使用spring initializer的时候没有data-rest可以选择了，但是需要引入data-jpa的依赖。
+		如果不引入，只能使用RepositoryRestResource注解，如果要用到RestResource注解还是需要手动在pom文件中引入data-rest的依赖的 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-rest</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+			<!-- <exclusions>
+				<exclusion>
+					<groupId>org.junit.vintage</groupId>
+					<artifactId>junit-vintage-engine</artifactId>
+				</exclusion>
+			</exclusions> -->
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		
+	</dependencies>
+
+<!-- 	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build> -->
+
+</project>

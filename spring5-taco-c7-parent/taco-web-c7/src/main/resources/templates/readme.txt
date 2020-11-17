@@ -1,0 +1,2 @@
+因为thymeleaf已经位于类路径下，所以不需要其他配置就可以用thymeleaf模板，home.html就是
+默认逻辑视图名对应的是template文件夹下的.html结尾的文件
