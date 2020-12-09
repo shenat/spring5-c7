@@ -1,10 +1,15 @@
 package com.sat.restClient.normal;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -13,7 +18,11 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.client.BufferingClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpRequestExecution;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.DefaultResponseErrorHandler;
@@ -34,15 +43,25 @@ public class TacoClientHttps {
 			//https
 			clientHttpsRequestFactory.setConnectTimeout(1000);//单位毫秒
 			clientHttpsRequestFactory.setReadTimeout(1000);//毫秒
-			restTemplate = new RestTemplate(clientHttpsRequestFactory);
+			//使用拦截器打印请求和响应内容的时候需要两次读取内容，需要使用到BufferingClientHttpRequestFactory
+//			restTemplate = new RestTemplate(clientHttpsRequestFactory);
+			restTemplate = new RestTemplate(new BufferingClientHttpRequestFactory(clientHttpsRequestFactory));
 		}else{
 			//http
 			SimpleClientHttpRequestFactory clientHttpRequestFactory = new SimpleClientHttpRequestFactory();
 			clientHttpRequestFactory.setConnectTimeout(1000);//单位毫秒
 			clientHttpRequestFactory.setReadTimeout(1000);//毫秒
-			restTemplate = new RestTemplate(clientHttpRequestFactory);
+			//使用拦截器打印请求和响应内容的时候需要两次读取内容，需要使用到BufferingClientHttpRequestFactory
+//			restTemplate = new RestTemplate(clientHttpRequestFactory);
+			restTemplate = new RestTemplate(new BufferingClientHttpRequestFactory(clientHttpsRequestFactory));
 		}
+		//添加自定以错误处理器
 		restTemplate.setErrorHandler(myResponseErrorHandler);
+		//添加自定义拦截器，打印请求和响应内容
+		List<ClientHttpRequestInterceptor> interceptors = new ArrayList<ClientHttpRequestInterceptor>();
+        interceptors.add(new LoggingClientHttpRequestInterceptor());
+        restTemplate.setInterceptors(interceptors);
+		
 	}
 	
 	//调用restTempalte中的操作
@@ -100,7 +119,7 @@ public class TacoClientHttps {
 	
 	
 	
-	//自定义异常处理器，已解决非200停止处理，这里对500和401的特殊处理了
+	//自定义异常处理器，以解决非200程序停止抛异常处理，这里对500和401的特殊处理了
 	//500在apigateway中是系统错误，401是授权码错误
 	class MyResponseErrorHandler extends DefaultResponseErrorHandler{
 
@@ -182,6 +201,45 @@ public class TacoClientHttps {
 			System.out.println("WARNING: Hostname is not matched for cert.");
 			return true;
 		}
+
+	}
+	
+	//自定义拦截器，以输出请求和响应原内容,这里有个疑问，如果请求体中是非String类型如何打印出来呢，还是不打印？
+	class LoggingClientHttpRequestInterceptor implements ClientHttpRequestInterceptor {
+
+	    @Override
+	    public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
+	        tranceRequest(request, body);
+	        ClientHttpResponse response = execution.execute(request, body);
+	        traceResponse(response);
+	        return response;
+	    }
+
+	    private void tranceRequest(HttpRequest request, byte[] body) throws UnsupportedEncodingException {
+	    	System.out.println("=========================== request begin ===========================");
+	    	System.out.println("uri : {" + request.getURI() + "}");
+	    	System.out.println("method : {" + request.getMethod() + "}");
+	    	System.out.println("headers : {" + request.getHeaders() + "}");
+	    	System.out.println(" request body : {" + new String(body, "utf-8") + "}");
+	    	System.out.println("============================ request end ============================");
+	    }
+
+	    private void traceResponse(ClientHttpResponse httpResponse) throws IOException {
+	        StringBuilder inputStringBuilder = new StringBuilder();
+	        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(httpResponse.getBody(), "UTF-8"));
+	        String line = bufferedReader.readLine();
+	        while (line != null) {
+	            inputStringBuilder.append(line);
+	            inputStringBuilder.append('\n');
+	            line = bufferedReader.readLine();
+	        }
+	        System.out.println("============================ response begin ============================");
+	        System.out.println("Status code  : {"+httpResponse.getStatusCode()+"}" );
+	        System.out.println("Status text  : {"+httpResponse.getStatusText()+"}");
+	        System.out.println("Headers      : {"+httpResponse.getHeaders()+"}");
+	        System.out.println("Response body: {"+inputStringBuilder.toString()+"}");
+	        System.out.println("============================= response end =============================");
+	    }
 
 	}
 }
